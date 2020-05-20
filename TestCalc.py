@@ -2,7 +2,6 @@
 Тесты для основной программы RegularCalculator.py
 """
 
-
 import RegularCalculator
 
 
