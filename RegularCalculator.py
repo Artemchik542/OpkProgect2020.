@@ -147,7 +147,7 @@ class Converting:  # практически сделанно (перевариа
 
             elif token in OPERATORS:  # если бинарная операция, то
                 if self.__stack[-1] != '(' and self.__stack[-1] != ')':  # проверка на скобки перед знаком в стеке
-                    while self.__stack and priority_function(token) <= priority_function(self.__stack[len(self.__stack)]):  # где-то здесь закралась ошибка
+                    while self.__stack and priority_function(token) <= priority_function(self.__stack[len(self.__stack)]):  # гдето здесь закралась ошибка
                         self.__output.append(self.__stack.pop())
                 self.__stack.append(token)
             token = self.get_token()
