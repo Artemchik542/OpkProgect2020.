@@ -5,7 +5,7 @@
     2) Перевод из инфиксной в посфиксную (ОПЗ) нотацию
     3) Решение програмой выражения
 """
-
+import sys
 
 OPERATORS = {  # словарь из веса каждого оператора
         '+': 1,
@@ -32,7 +32,7 @@ def priority_function(a: str) -> int:  # возвращение приорите
     return OPERATORS[a]
 
 
-def isfloat(number: str) -> bool:  # проверка числа на тип float
+def is_float(number: str) -> bool:  # проверка числа на тип float
     try:
         float(number)
         return True
@@ -47,14 +47,14 @@ def isfloat(number: str) -> bool:  # проверка числа на тип flo
 
 class Parsing:  # работает! (не трогать, пока что)
     def __init__(self, exp):
-        self.__exp = '(' + exp + ')'
+        self.__exp = '(' + exp + ')'  # само наше выражение
         self.__pos = 0  # указатель положения считывателя строки
 
     def __read_number(self) -> str:  # вычленение следующего числа (и дробного и многозначного)
         res = ''  # результируещее число
         point = 0
         sign = self.__exp[self.__pos]
-        polarity = False  # то проределен ли у числа знак + или -
+        polarity = False  # то определен ли у числа знак + или -
         if sign.isdigit():
             polarity = True
         while sign.isdigit() or sign == '.' or sign == '-' or sign == '+':
@@ -87,12 +87,16 @@ class Parsing:  # работает! (не трогать, пока что)
 
         return None
 
-    def make(self) -> list:
+    def make(self) -> list:  # главный метод Parsing
+        self.__exp = self.__exp.replace(' ', '')  # убрали пробелы
         listed_str = []
         token = self.__get_token()
         while token:
             listed_str.append(token)
             token = self.__get_token()
+
+        if listed_str.count('(') != listed_str.count(')'):  # проверка на равенство кол-ва скобок ( и )
+            return []
 
         return listed_str
 
@@ -102,78 +106,56 @@ class Parsing:  # работает! (не трогать, пока что)
 """
 
 
-class Converting:  # требуется доделать!
+class Converting:  # практически сделанно (перевариает только простые выражения)
     def __init__(self, exp):
-        self.__exp = exp.reverse()  # развернули список для удобства
-        self.__prev_token = None  # предыдущий токен
-        self.__operands = []  # Стек операндов (например, числа)
-        self.__functions = []  # Стек операторов (функций, например +, *, и т.п.)
-        self.__pos = 0  # указатель положения считывателя строки
+        self.__exp = exp  # входная, уже распарсеная строка
+        self.__stack = []  # буферный стек элементов
+        self.__output = []  # общий выход(итог) класса Converting в ОПЗ
+        self.__pos = 0  # указатель положения считывателя списка
 
-    def __can_pop(self, item):  # проверка на возможность дельнейшего изьятия из списка
-        if not self.__functions:  # проверка на не пустой список стека функций
-            return False
+    def get_token(self):
+        if self.__pos < len(self.__exp):
+            new_token = self.__exp[self.__pos]
+            self.__pos += 1
+        else:
+            return None
 
-        head = self.__functions[-1]  # элемент с конца списка
-        if not is_function(head):
-            return False
+        return new_token
 
-        p1 = priority_function(item)
-        p2 = priority_function(head)
+    def make(self) -> list:
 
-        return p1 <= p2
-
-    def __get_token(self) -> str:  # изъятие следующего токена
-        token = self.__exp.pop()
-        self.__pos += 1
-
-        return token
-
-    def make(self):
-        token = self.__get_token()  # берем очередной токен(число полностью или знак)
-
+        token = self.get_token()  # берем очередной токен (число полностью или знак)
+        """Здесь применен алгоритм Эдсгера Дейкстра для перевода"""
         while token:  # выполняем пока есть символы в строке
-            if token.isspace():  # пропускаем пробельный символ
-                pass
 
-            elif token.isdigit() or isfloat(token):  # если число
-                self.__operands.append(token)
+            if token.isdigit() or is_float(token):  # если число то прибавляем его к выходной строке
+                self.__output.append(token)
 
-            elif is_function(token):
-                # Разруливаем ситуации, когда после первой скобки '(' идет знак + или -
-                if self.__prev_token and self.__prev_token == '(' and (token == '+' or token == '-'):
-                    self.__operands.append(0)
+            elif token == '(':  # открывающую скобку сразу помещаем в стек
+                self.__stack.append(token)
 
-                # Мы можем вытолкнуть, если оператор c имеет меньший или равный приоритет, чем
-                # оператор на вершине стека functions
-                # Например, с='+', а head='*', тогда выполнится операция head
-                while self.__can_pop(token):
-                    self.__execute_function()
+            elif token == ')':  # выпихиваем из стека все до открывающей скобки (ее саму в конце просто удаляем)
+                top_token = self.__stack.pop()
+                while top_token != '(':
+                    self.__output.append(top_token)
+                    if self.__stack:
+                        top_token = self.__stack.pop()
+                    else:
+                        break
 
-                self.__functions.append(token)
+                # self.__stack.pop()  # удаление скобки
 
-            elif token == '(':
-                self.__functions.append(token)
+            elif token in OPERATORS:  # если бинарная операция, то
+                if self.__stack[-1] != '(' and self.__stack[-1] != ')':  # проверка на скобки перед знаком в стеке
+                    while self.__stack and priority_function(token) <= priority_function(self.__stack[len(self.__stack)]):  # где-то здесь закралась ошибка
+                        self.__output.append(self.__stack.pop())
+                self.__stack.append(token)
+            token = self.get_token()
 
-            elif token == ')':
-                # Выталкиваем все операторы (функции) до открывающей скобки
-                while self.__functions and self.__functions[-1] != '(':
-                    self.__execute_function()
+        while self.__stack:  # допихиваем все что осталось в стеке в выход
+            self.__output.append(self.__stack.pop())
 
-                # Убираем последнюю скобку '('
-                self.__functions.pop()
-
-            # Запоминаем токен как предыдущий
-            self.__prev_token = token
-
-            # Получаем новый токен
-            token = self.__get_token()
-
-        if self.__functions or len(self.__operands) > 1:
-            raise Exception('Неверное выражение: operands={}, functions={}'.format(self.__operands, self.__functions))
-
-        # Единственным значением списка operands будет результат выражения
-        return self.__operands[0]
+        return self.__output
 
 
 class Solving:  # тоже требуется доделать!
@@ -199,7 +181,12 @@ class Solving:  # тоже требуется доделать!
 def main():
     input_str = input('Введите выражение: ')
     parsed_list = Parsing(input_str).make()  # парсинг строки
+    if not parsed_list:
+        print("не соответствие скобок")
+        sys.exit()
     print(parsed_list)
+    converted_list = Converting(parsed_list).make()  # перевод в ОПЗ
+    print(converted_list)
 
 
 if __name__ == "__main__":
