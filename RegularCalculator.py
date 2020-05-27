@@ -106,7 +106,7 @@ class Parsing:  # работает! (не трогать, пока что)
 """
 
 
-class Converting:  # практически сделанно (перевариает только простые выражения)
+class Converting:  # работает, пока не трогать!
     def __init__(self, exp):
         self.__exp = exp  # входная, уже распарсеная строка
         self.__stack = []  # буферный стек элементов
@@ -125,7 +125,9 @@ class Converting:  # практически сделанно (перевариа
     def make(self) -> list:
 
         token = self.get_token()  # берем очередной токен (число полностью или знак)
+
         """Здесь применен алгоритм Эдсгера Дейкстра для перевода"""
+
         while token:  # выполняем пока есть символы в строке
 
             if token.isdigit() or is_float(token):  # если число то прибавляем его к выходной строке
@@ -142,13 +144,12 @@ class Converting:  # практически сделанно (перевариа
                         top_token = self.__stack.pop()
                     else:
                         break
-
                 # self.__stack.pop()  # удаление скобки
 
             elif token in OPERATORS:  # если бинарная операция, то
-                if self.__stack[-1] != '(' and self.__stack[-1] != ')':  # проверка на скобки перед знаком в стеке
-                    while self.__stack and priority_function(token) <= priority_function(self.__stack[len(self.__stack)]):  # гдето здесь закралась ошибка
-                        self.__output.append(self.__stack.pop())
+
+                while self.__stack[-1] in OPERATORS and priority_function(token) <= priority_function(self.__stack[-1]):
+                    self.__output.append(self.__stack.pop())
                 self.__stack.append(token)
             token = self.get_token()
 
