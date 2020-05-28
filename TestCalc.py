@@ -2,31 +2,38 @@
 Тесты для основной программы RegularCalculator.py
 """
 
-import RegularCalculator
+import Parser
+import Converter
+import Solver
 
 
-def func(exp):  # оченьжирняфункция/3
-    prs = RegularCalculator.Parsing(exp).make()
-    cnv = RegularCalculator.Converting(prs).make()
-    ans = RegularCalculator.Solving(cnv).make()
+def func(exp: str) -> float:  # функция СразуВсё!
+    prs = Parser.main(exp)
+    cnv = Converter.main(prs)
+    ans = Solver.main(cnv)
     return ans
 
 
 def tests():
+
     str1 = "2+2"
     str2 = "2*2-2"
     str3 = "((2+2)*2)^2"
-    assert RegularCalculator.Parsing(str1).make() == ['(', '2', '+', '2', ')'], "Простая ошибка парсинга"
-    assert RegularCalculator.Parsing(str2).make() == ['(', '2', '*', '2', '-', '2', ')'], "Сложная ошибка парсинга"
-    assert RegularCalculator.Parsing(str3).make() == ['(', '(', '(', '2', '+', '2', ')', '*', '2', ')', '^', '2', ')'], "Супер ошибка"
-    p_str1 = RegularCalculator.Parsing(str1).make()
-    p_str2 = RegularCalculator.Parsing(str2).make()
-    p_str3 = RegularCalculator.Parsing(str3).make()
-    assert RegularCalculator.Converting(p_str1).make() == ['2', '2', '+'], "Простая ошибка перевода"
-    assert RegularCalculator.Converting(p_str2).make() == ['2', '2', '*', '2', '-'], "Сложная ошибка перевода"
-    assert RegularCalculator.Converting(p_str3).make() == ['2', '2', '+', '2', '*', '2', '^'], "Супер ошибка"
-    c_str1 = RegularCalculator.Converting(p_str1).make()
-    assert RegularCalculator.Solving(c_str1).make() == 4, ""
+
+    """ Проверка отдельно парсера (разделителя) """
+    assert Parser.main(str1) == ['(', '2', '+', '2', ')'], "Простая ошибка парсинга"
+    assert Parser.main(str2) == ['(', '2', '*', '2', '-', '2', ')'], "Сложная ошибка парсинга"
+    assert Parser.main(str3) == ['(', '(', '(', '2', '+', '2', ')', '*', '2', ')', '^', '2', ')'], "Супер ошибка"
+    p_str1 = Parser.main(str1)
+    p_str2 = Parser.main(str2)
+    p_str3 = Parser.main(str3)
+
+    """ Проверка отдельно преобразовател в ОПЗ """
+    assert Converter.main(p_str1) == ['2', '2', '+'], "Простая ошибка перевода"
+    assert Converter.main(p_str2) == ['2', '2', '*', '2', '-'], "Сложная ошибка перевода"
+    assert Converter.main(p_str3) == ['2', '2', '+', '2', '*', '2', '^'], "Супер ошибка"
+
+    """ Проверка всей программы в совокупе """
     assert func("2*2") == 4
     assert func("2+2+2+2+2") == 10
     assert func("(2+2)*2") == 8
