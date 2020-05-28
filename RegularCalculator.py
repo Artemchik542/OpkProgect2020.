@@ -5,15 +5,9 @@
     2) Перевод из инфиксной в посфиксную (ОПЗ) нотацию
     3) Решение програмой выражения
 """
-import sys
 
-OPERATORS = {  # словарь из веса каждого оператора
-        '+': 1,
-        '-': 1,
-        '*': 2,
-        '/': 2,
-        '^': 3,
-    }
+
+OPERATORS = {'+': 1, '-': 1, '*': 2, '/': 2, '^': 3}  # словарь из веса каждого оператора
 
 
 """
@@ -22,10 +16,12 @@ OPERATORS = {  # словарь из веса каждого оператора
 
 
 def is_function(a: str) -> bool:  # проверка на соответствие функции из словаря
+
     return a in OPERATORS.keys()
 
 
 def priority_function(a: str) -> int:  # возвращение приоритета функции
+
     if not is_function(a):
         raise Exception('Не найден оператор "{}"'.format(a))
 
@@ -33,6 +29,7 @@ def priority_function(a: str) -> int:  # возвращение приорите
 
 
 def is_float(number: str) -> bool:  # проверка числа на тип float
+
     try:
         float(number)
         return True
@@ -51,6 +48,7 @@ class Parsing:  # работает! (не трогать, пока что)
         self.__pos = 0  # указатель положения считывателя строки
 
     def __read_number(self) -> str:  # вычленение следующего числа (и дробного и многозначного)
+
         res = ''  # результируещее число
         point = 0
         sign = self.__exp[self.__pos]
@@ -76,6 +74,7 @@ class Parsing:  # работает! (не трогать, пока что)
         return res
 
     def __get_token(self):  # считывание следующего элемента(токена)
+
         for i in range(self.__pos, len(self.__exp)):
             item = self.__exp[i]
             pref_item = self.__exp[i - 1]
@@ -88,6 +87,7 @@ class Parsing:  # работает! (не трогать, пока что)
         return None
 
     def make(self) -> list:  # главный метод Parsing
+
         self.__exp = self.__exp.replace(' ', '')  # убрали пробелы
         listed_str = []
         token = self.__get_token()
@@ -114,6 +114,7 @@ class Converting:  # работает, пока не трогать!
         self.__pos = 0  # указатель положения считывателя списка
 
     def get_token(self):
+
         if self.__pos < len(self.__exp):
             new_token = self.__exp[self.__pos]
             self.__pos += 1
@@ -159,36 +160,58 @@ class Converting:  # работает, пока не трогать!
         return self.__output
 
 
-class Solving:  # тоже требуется доделать!
-    def __execute_function(self):  # выполнение выражения
-        if len(self.__operands) < 2:
-            return
+class Solving:  # теперь работает!
+    def __init__(self, exp):
+        self.__exp = exp  # входная, переделанная строка в ОПЗ
+        self.__stack = []  # буферный стек элементов
 
-        a, b = self.__operands.pop(), self.__operands.pop()
-        f = self.__functions.pop()
+    def make(self):
 
-        if f == '+':  # можно вернуть запись через словарь
-            self.__operands.append(b + a)
-        elif f == '-':
-            self.__operands.append(b - a)
-        elif f == '*':
-            self.__operands.append(b * a)
-        elif f == '/':
-            self.__operands.append(b / a)
-        elif f == '^':
-            self.__operands.append(b ** a)
+        self.__exp.reverse()
+        while self.__exp:
+            if is_float(self.__exp[-1]):
+                self.__stack.append(self.__exp[-1])
+                self.__exp.pop()  # !
+            elif self.__exp[-1] in OPERATORS:
+                self.execute_function(self.__exp[-1])
+                self.__exp.pop()
+
+        return self.__stack.pop()
+
+    def execute_function(self, operand):
+
+        b = float(self.__stack.pop())
+        a = float(self.__stack.pop())
+        if operand == '+':
+            self.__stack.append(a + b)
+        elif operand == '-':
+            self.__stack.append(a - b)
+        elif operand == '*':
+            self.__stack.append(a * b)
+        elif operand == '/':
+            self.__stack.append(a / b)
+        elif operand == '^':
+            self.__stack.append(a ** b)
 
 
 def main():
-    input_str = input('Введите выражение: ')
-    parsed_list = Parsing(input_str).make()  # парсинг строки
-    if not parsed_list:
-        print("не соответствие скобок")
-        sys.exit()
-    print(parsed_list)
-    converted_list = Converting(parsed_list).make()  # перевод в ОПЗ
-    print(converted_list)
+
+    try:
+        is_debug = True  # режим отладки
+        input_str = input('Введите выражение: ')
+        parsed_list = Parsing(input_str).make()  # парсинг строки
+        if not parsed_list:  # возвращается пустым если ошибка
+            raise IndexError
+        converted_list = Converting(parsed_list).make()  # перевод в ОПЗ
+        if is_debug:
+            print(parsed_list)
+            print(converted_list)
+        return Solving(converted_list).make()
+    except ZeroDivisionError:
+        return 'Делить на ноль нельзя'
+    except IndexError:
+        return 'Некорректный ввод'
 
 
 if __name__ == "__main__":
-    main()
+    print(main())
