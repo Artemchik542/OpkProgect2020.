@@ -48,6 +48,7 @@ def priority_function(a: str) -> int:  # возвращение приорите
 
 
 def get_token(my_convert: Converter) -> str:
+
     if my_convert.pos < len(my_convert.exp):
         new_token = my_convert.exp[my_convert.pos]
         my_convert.pos += 1
