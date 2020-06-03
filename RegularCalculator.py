@@ -5,8 +5,8 @@
     2) Перевод из инфиксной в посфиксную (ОПЗ) нотацию
     3) Решение програмой выражения
 
-    Это нужно доделать
-    + дописать константы и еще функции sin cos и тд
+    Это нужно доделать:
+    + обработка иксключений как: 1/0 ; log(-1); sqrt(-1) и т.д.
 """
 
 
@@ -17,8 +17,7 @@ import Solver
 
 def main():
 
-    is_debug = False
-    debug = input('Включить отладку? (y/n), остальные символы выход из программы')
+    debug = input('Включить отладку? (y/n): ')
     if debug == 'y':
         is_debug = True
     elif debug == 'n':
@@ -38,12 +37,12 @@ def main():
                 print(converted_list)
             print(Solver.main(converted_list))
     except ZeroDivisionError:
-        return 'Делить на ноль нельзя'
+        print('Делить на ноль нельзя')
     except IndexError:
-        return 'Некорректный ввод'
+        print('Некорректный ввод')
     except FloatingPointError:
-        return 'В числе больше чем одна точка'
+        print('В числе больше чем одна точка')
 
 
 if __name__ == "__main__":
-    print(main())
+    main()

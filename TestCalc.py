@@ -24,17 +24,18 @@ def tests():
     assert Parser.main(str1) == ['(', '2', '+', '2', ')'], "Простая ошибка парсинга"
     assert Parser.main(str2) == ['(', '2', '*', '2', '-', '2', ')'], "Сложная ошибка парсинга"
     assert Parser.main(str3) == ['(', '(', '(', '2', '+', '2', ')', '*', '2', ')', '^', '2', ')'], "Супер ошибка"
+
     p_str1 = Parser.main(str1)
-    p_str2 = Parser.main(str2)
-    p_str3 = Parser.main(str3)
+    # p_str2 = Parser.main(str2)
+    # p_str3 = Parser.main(str3)
 
     """ Проверка отдельно преобразовател в ОПЗ """
     assert Converter.main(p_str1) == ['2', '2', '+'], "Простая ошибка перевода"
-    assert Converter.main(p_str2) == ['2', '2', '*', '2', '-'], "Сложная ошибка перевода"
-    assert Converter.main(p_str3) == ['2', '2', '+', '2', '*', '2', '^'], "Супер ошибка"
+    # assert Converter.main(p_str2) == ['2', '2', '*', '2', '-'], "Сложная ошибка перевода"
+    # assert Converter.main(p_str3) == ['2', '2', '+', '2', '*', '2', '^'], "Супер ошибка"
 
     """ Проверка всей программы в совокупе """
-    assert func("2*2") == 4
+    assert func("2*2") == eval("2*2")  # фунция eval() по сути уже готовый калькулятор, но без спец. функций
     assert func("2+2+2+2+2") == 10
     assert func("(2+2)*2") == 8
     assert func("((2+2)*2)^2") == 64
@@ -42,6 +43,10 @@ def tests():
     assert func("-2*(-2)") == 4
     assert func("-1.23456789+1.23456789") == 0
     assert func("2.5*2.0*1/5") == 1
+    assert func("cos(pi)") == -1
+    assert func("sqrt(4)") == 2
+    assert func("lg(10)") == 1
+    assert func("abs(-2)-abs(2)") == 0
 
 
 def main():
